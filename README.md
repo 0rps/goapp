@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Welcome to Revel
 
 ## Getting Started
@@ -73,3 +74,7 @@ test
 We encourage you to contribute to Revel! Please check out the [Contributing to Revel
 guide](https://github.com/revel/revel/blob/master/CONTRIBUTING.md) for guidelines about how
 to proceed. [Join us](https://groups.google.com/forum/#!forum/revel-framework)!
+=======
+# goapp
+asdfasdf
+>>>>>>> 3565ee767e03640d6d44e9b91acfcd05d75aaa37

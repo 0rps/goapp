@@ -26,12 +26,34 @@ func InitDB() {
 		revel.INFO.Println("DB connected")
 
 		if false == isexist {
-			_, errsql := DB.Exec("CREATE TABLE Users(id INTEGER PRIMARY KEY AUTOINCREMENT, login TEXT, password TEXT)")
+			_, errsql := DB.Exec(`
+				CREATE TABLE Users(
+					id INTEGER PRIMARY KEY AUTOINCREMENT, 
+					login TEXT, 
+					password TEXT);
+				CREATE TABLE Sessions(
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					secret TEXT,
+					user_id INTEGER);
+				CREATE TABLE Rooms(
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					name TEXT);
+				CREATE TABLE UsersInRooms(
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id INTEGER,
+					room_id INTEGER
+					); 
+				CREATE TABLE Messages (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					sender TEXT,
+					message TEXT,
+					room_id INTEGER,
+					receiver_id INTEGER
+					timestamp TEXT)`)
 			if errsql != nil {
 				revel.INFO.Println("error: ", errsql)
 			}
 		}
-
 	}
 }
 

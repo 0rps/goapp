@@ -2,8 +2,8 @@ package models
 
 import (
 	"fmt"
+	"github.com/0rps/goapp/app"
 	"github.com/revel/revel"
-	"goapp/app"
 )
 
 type User struct {

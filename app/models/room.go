@@ -1,12 +1,12 @@
 package models
 
 type Room struct {
-	id int
+	id   int
 	name string
 }
 
 type UserInRoom struct {
-	id int
+	id     int
 	userId int
 	roomId int
 }

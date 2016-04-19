@@ -1,7 +1,7 @@
 package controllers
 
 import "github.com/revel/revel"
-import "goapp/app/models"
+import "github.com/0rps/goapp/app/models"
 
 type App struct {
 	*revel.Controller

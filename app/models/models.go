@@ -117,7 +117,7 @@ func GetSession(id int, secret string) (Session, error) {
 	)
 
 	queryErr := app.DB.QueryRow(`
-		SELECT secret, userId FROM Sessions 
+		SELECT secret, user_id FROM Sessions 
 		WHERE id=?`, id).Scan(&session.Secret, &session.UserId)
 
 	switch {
@@ -126,6 +126,7 @@ func GetSession(id int, secret string) (Session, error) {
 	case err != nil:
 		err = queryErr
 	default:
+		//	revel.INFO.Printf("sql session id=%d, sec=%s, uid = %d", id, ssecret, sid)
 		if session.Secret == secret {
 			session.Id = id
 		} else {

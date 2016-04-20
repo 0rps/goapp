@@ -3,7 +3,6 @@ package app
 import (
 	"database/sql"
 	"fmt"
-	"github.com/0rps/goapp/app/models"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/revel/revel"
 	"os"
@@ -56,21 +55,6 @@ func InitDB() {
 			}
 		}
 	}
-}
-
-func checkUser(c *revel.Controller) revel.Result {
-
-	strId, ok1 := c.Session["session_id"]
-	secret, ok2 := c.Session["session_secret"]
-
-	c.RenderArgs["loggedIn"] = false
-	if ok1 == nil && ok2 == nil {
-		session, err := models.GetSession(id, secret)
-		if err == nil {
-			c.RenderArgs["loggedIn"] = true
-		}
-	}
-	return nil
 }
 
 func init() {

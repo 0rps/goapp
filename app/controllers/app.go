@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/0rps/goapp/app/models"
 	"github.com/revel/revel"
 	"strconv"
@@ -10,14 +11,67 @@ type App struct {
 	*revel.Controller
 }
 
+func (c *App) getSession() (models.Session, error) {
+	var session models.Session
+	var err error
+
+	id, ok1 := c.Session["sessionid"]
+	secret, ok2 := c.Session["sessionsecret"]
+
+	if ok1 && ok2 {
+		sessionId, _ := strconv.ParseInt(id, 10, 32)
+		session, modelsErr := models.GetSession(int(sessionId), secret)
+		if err == nil {
+			return session, nil
+		}
+		err = modelsErr
+	} else {
+		err = errors.New("couldnot get session from cookie")
+	}
+
+	return session, err
+}
+
+func (c *App) loginWrapper() {
+	session, err := c.getSession()
+
+	if err == nil {
+		revel.INFO.Println("user is logged in")
+		c.RenderArgs["loggedIn"] = true
+		c.RenderArgs["userId"] = session.UserId
+	} else {
+		revel.INFO.Println("user is not logged in, err", err)
+
+		c.RenderArgs["loggedIn"] = false
+		c.RenderArgs["userId"] = -1
+	}
+}
+
+func (c *App) userId() int {
+	return c.RenderArgs["userId"].(int)
+}
+
+func (c *App) isLoggedIn() bool {
+	return c.RenderArgs["loggedIn"].(bool)
+}
+
 func (c App) Login(login, password string) revel.Result {
 	revel.INFO.Printf("login is '%s', pass is '%s'", login, password)
+
+	c.loginWrapper()
+
+	if c.isLoggedIn() {
+		return c.Redirect("/")
+	}
 
 	if login != "" || password != "" {
 		session, noerror := models.Authorize(login, password)
 		if noerror {
-			c.Session["session_id"] = strconv.FormatInt(session.Id, 10)
-			c.Session["session_secret"] = session.Secret
+			c.Session["sessionid"] = strconv.FormatInt(int64(session.Id), 10)
+			c.Session["sessionsecret"] = session.Secret
+
+			revel.INFO.Printf("session is installed,%s,%s", c.Session["sessionid"], c.Session["sessionsecret"])
+
 			c.Flash.Success("Пользователь авторизован")
 			return c.Redirect("/")
 		} else {
@@ -31,6 +85,12 @@ func (c App) Login(login, password string) revel.Result {
 
 func (c App) Register(login, password, repassword string) revel.Result {
 	revel.INFO.Printf("login is '%s', pass is '%s', repass is '%s'", login, password, repassword)
+
+	c.loginWrapper()
+
+	if c.isLoggedIn() {
+		return c.Redirect("/")
+	}
 
 	if login != "" || password != "" || repassword != "" {
 		c.Validation.Required(login).Message("Введите логин")
@@ -66,5 +126,23 @@ func (c App) Register(login, password, repassword string) revel.Result {
 }
 
 func (c App) Index() revel.Result {
+	c.loginWrapper()
 	return c.RenderTemplate("App/Index.html")
+}
+
+func (c App) Logout() revel.Result {
+	c.loginWrapper()
+
+	if c.isLoggedIn() {
+		session, _ := c.getSession()
+		err := session.Remove()
+		if err == nil {
+			delete(c.Session, "sessionid")
+			delete(c.Session, "sessionsecret")
+		} else {
+			revel.INFO.Println("couldnot logout, ", err)
+		}
+	}
+
+	return c.Redirect("/")
 }

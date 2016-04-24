@@ -7,8 +7,11 @@ module:testrunner
 GET     /                                       App.Index
 *		/login									App.Login
 *		/register								App.Register
-*		/logout		App.Logout
-
+*		/logout									App.Logout
+*		/rooms									App.Rooms
+*		/room 									App.Room
+*		/config									App.Config
+*		/room/websocket							App.RoomSocket
 # Ignore favicon requests
 GET     /favicon.ico                            404
 

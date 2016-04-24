@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"errors"
+	"github.com/0rps/goapp/app/chatroom"
 	"github.com/0rps/goapp/app/models"
 	"github.com/revel/revel"
+	"golang.org/x/net/websocket"
 	"strconv"
 )
 
@@ -21,10 +23,13 @@ func (c *App) getSession() (models.Session, error) {
 	if ok1 && ok2 {
 		sessionId, _ := strconv.ParseInt(id, 10, 32)
 		session, modelsErr := models.GetSession(int(sessionId), secret)
+
 		if err == nil {
 			return session, nil
 		}
+
 		err = modelsErr
+
 	} else {
 		err = errors.New("couldnot get session from cookie")
 	}
@@ -145,4 +150,81 @@ func (c App) Logout() revel.Result {
 	}
 
 	return c.Redirect("/")
+}
+
+func (c App) Rooms() revel.Result {
+	return c.Redirect("/")
+}
+
+func (c App) Config() revel.Result {
+	return c.Redirect("/")
+}
+
+func (c App) Room() revel.Result {
+	id := 1
+	revel.INFO.Printf("room request, id = ", id)
+
+	c.loginWrapper()
+
+	if !c.isLoggedIn() {
+		return c.Redirect("/")
+	}
+
+	return c.RenderTemplate("App/Room.html")
+}
+
+func (c App) RoomSocket(ws *websocket.Conn) revel.Result {
+	roomId := 1
+	c.loginWrapper()
+	if !c.isLoggedIn() {
+		return nil
+	}
+
+	subscription := chatroom.Subscribe(roomId)
+	defer subscription.Cancel()
+
+	user, _ := models.FindUserById(c.userId())
+
+	chatroom.Join(roomId, user.Login)
+	defer chatroom.Leave(roomId, user.Login)
+
+	for _, msg := range models.GetArchiveMessages(roomId) {
+		if websocket.JSON.Send(ws, &msg) != nil {
+			return nil
+		}
+	}
+
+	newMessages := make(chan string)
+	go func() {
+		var msg string
+		for {
+			err := websocket.Message.Receive(ws, &msg)
+			if err != nil {
+				close(newMessages)
+				return
+			}
+			newMessages <- msg
+		}
+	}()
+
+	// Now listen for new events from either the websocket or the chatroom.
+	for {
+		select {
+		case event := <-subscription.New:
+			if websocket.JSON.Send(ws, &event) != nil {
+				// They disconnected.
+				return nil
+			}
+		case msg, ok := <-newMessages:
+			// If the channel is closed, they disconnected.
+			if !ok {
+				return nil
+			}
+
+			// Otherwise, say something.
+			chatroom.Say(roomId, user.Login, msg)
+		}
+	}
+	return nil
+
 }

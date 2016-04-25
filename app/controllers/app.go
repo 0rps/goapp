@@ -188,16 +188,17 @@ func (c App) RoomSocket(ws *websocket.Conn) revel.Result {
 	chatroom.Join(roomId, user.Login)
 	defer chatroom.Leave(roomId, user.Login)
 
-	for _, msg := range models.GetArchiveMessages(roomId) {
-		if websocket.JSON.Send(ws, &msg) != nil {
-			return nil
-		}
-	}
+	// for _, msg := range models.GetArchiveMessages(roomId) {
+	// 	if websocket.JSON.Send(ws, &msg) != nil {
+	// 		return nil
+	// 	}
+	// }
 
 	newMessages := make(chan string)
 	go func() {
 		var msg string
 		for {
+			revel.INFO.Println("try to reveive socket message")
 			err := websocket.Message.Receive(ws, &msg)
 			if err != nil {
 				close(newMessages)
@@ -211,11 +212,15 @@ func (c App) RoomSocket(ws *websocket.Conn) revel.Result {
 	for {
 		select {
 		case event := <-subscription.New:
+			revel.INFO.Println("main loop: new message: ", event.Text)
+
 			if websocket.JSON.Send(ws, &event) != nil {
 				// They disconnected.
 				return nil
 			}
 		case msg, ok := <-newMessages:
+			revel.INFO.Println("main loop: try to say to all: ", msg)
+
 			// If the channel is closed, they disconnected.
 			if !ok {
 				return nil

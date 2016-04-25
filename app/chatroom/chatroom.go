@@ -2,6 +2,7 @@ package chatroom
 
 import (
 	"container/list"
+	"github.com/revel/revel"
 	"time"
 )
 
@@ -42,21 +43,27 @@ func newEvent(typ, user, msg string, roomId int) Event {
 }
 
 func Subscribe(roomId int) Subscription {
-	wrapper := SubscriptionWrapper{}
-	wrapper.roomId = roomId
+	revel.INFO.Println("new subscription")
+	wrapper := SubscriptionWrapper{roomId: roomId, subscription: make(chan Subscription)}
 	subscribe <- wrapper
-	return <-wrapper.subscription
+	subscription := <-wrapper.subscription
+	revel.INFO.Println("subscribed")
+
+	return subscription
 }
 
 func Join(roomId int, user string) {
+	revel.INFO.Println("join to room")
 	publish <- newEvent("join", user, "", roomId)
 }
 
 func Say(roomId int, user, message string) {
+	revel.INFO.Println("say to all")
 	publish <- newEvent("message", user, message, roomId)
 }
 
 func Leave(roomId int, user string) {
+	revel.INFO.Println("leave room")
 	publish <- newEvent("leave", user, "", roomId)
 }
 
@@ -68,12 +75,15 @@ var (
 
 // This function loops forever, handling the chat room pubsub
 func chatroom() {
+	revel.INFO.Println("chatroom start")
+
 	subscribers := make(map[int](*list.List))
 
 	for {
 		select {
 		case wrapper := <-subscribe:
-			if _, ok := subscribers[wrapper.roomId]; ok {
+			revel.INFO.Println("loop: attemp to subscribe")
+			if _, ok := subscribers[wrapper.roomId]; !ok {
 				subscribers[wrapper.roomId] = list.New()
 			}
 
@@ -82,11 +92,15 @@ func chatroom() {
 			wrapper.subscription <- Subscription{wrapper.roomId, subscriber}
 
 		case event := <-publish:
+			revel.INFO.Println("pool: try to publish")
+
 			for ch := subscribers[event.RoomId].Front(); ch != nil; ch = ch.Next() {
 				ch.Value.(chan Event) <- event
 			}
 
 		case unsub := <-unsubscribe:
+			revel.INFO.Println("unsubscribe")
+
 			for ch := subscribers[unsub.roomId].Front(); ch != nil; ch = ch.Next() {
 				if ch.Value.(chan Event) == unsub.eventChan {
 					subscribers[unsub.roomId].Remove(ch)

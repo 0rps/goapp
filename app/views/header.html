@@ -4,35 +4,41 @@
   <head>
     <title>{{.title}}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <link rel="stylesheet" type="text/css" href="/public/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/public/css/bootstrap.min.css">
     <link rel="shortcut icon" type="image/png" href="/public/img/favicon.png">
     <script src="/public/js/jquery-1.9.1.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/public/js/jquery.scrollTo-min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/public/js/templating.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+
+    <script src="/public/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+
     {{range .moreStyles}}
       <link rel="stylesheet" type="text/css" href="/public/{{.}}">
     {{end}}
+    
+    {{range .moreBabelScripts}}
+      <script src="/public/{{.}}" type="text/babel" charset="utf-8"></script>
+    {{end}}
+
     {{range .moreScripts}}
       <script src="/public/{{.}}" type="text/javascript" charset="utf-8"></script>
     {{end}}
   </head>
   <body>
   <header class="hero-unit" style="padding: 20px">
-  <div class="container">
-    <div class="row">
-      <div>
-        <h2>#ChatRoom</h2>
-      </div>
-      <div> <ul class="nav">
-          {{ if .loggedIn }}
-          <li><a href="/chat">    Chats</a></li>
-          <li><a href="/rooms">   Room configuration</a></li>
-          <li><a href="/logout">  Logout</a></li>
-            {{ else }}
-          <li><a href="/login">   Login</a></li>
-          <li><a href="/register">Register</a></li>
+      <div style="width: 100%">
+        <div style="float: left; height: 100px; vertical-align: top">
+          <h2>#ChatRoom</h2>
+        </div>
+        <div style="float: left; height: 100px; vertical-align: center"> <ul class="nav nav-pills">
+            {{ if .loggedIn }}
+            <li><a href="/room">   Chat</a></li>
+            <li><a href="/logout">  Logout</a></li>
+              {{ else }}
+            <li><a href="/login">   Login</a></li>
+            <li><a href="/register">Register</a></li>
           {{ end}}
-        </ul> </div>
-    </div>
-  </div>
+        </ul> 
+        </div>
+      </div>
 </header>

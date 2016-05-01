@@ -170,6 +170,9 @@ func (c App) Room() revel.Result {
 		return c.Redirect("/")
 	}
 
+	c.RenderArgs["moreScripts"] = []string{"js/react.js", "js/react-dom.js"}
+
+	c.RenderArgs["moreBabelScripts"] = []string{"js/chat.js"}
 	return c.RenderTemplate("App/Room.html")
 }
 

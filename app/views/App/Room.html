@@ -9,51 +9,106 @@
   </div>
 </div>
 
-<div class="container">
+<div class="container" style="width: 500px">
   <div class="row">
-    <div class="span6">
-    <div id="thread">
-      
+    <div class="panel panel-info">
+
+      <div class="panel-heading">
+        <h3 class="panel-title">Chat NAME</h3>
+      </div>
+
+      <div id="thread" class="panel-body"></div>
     </div>
 
-    <div id="newMessage">
+    <div id="newMessage" style="display: inline;">
       <input type="text" id="message" autocomplete="off" autofocus="">
       <input type="submit" values="Отправить" id="send">
-    </div>
-
     </div>
   </div>
 </div>
 
-<script type="text/javascript">
+<script type="text/babel">
   // Create a socket
-  var socket = new WebSocket('ws://'+window.location.host+'/room/websocket')
+
+    var MessageElement = React.createClass( 
+{
+  render: function() {
+    return (
+      <div style={this.props.msgst}>
+          
+          <div>
+            <span style={this.props.userst}><b>(12:51) {this.props.user}</b></span>
+          </div>
+
+          <div>
+            <span>{this.props.msg}</span>
+          </div>
+
+        </div>
+    )
+  }
+});
+
+var JoinElement = React.createClass( 
+{
+  render: function() {
+    return (
+      <div style={this.props.msgst}>
+      <b> Пользователь {this.props.user} присоединился</b>
+      </div>
+    )
+  }
+});
+
+var LeaveElement = React.createClass( 
+{
+  render: function() {
+    return (
+      <div style={this.props.msgst}>
+      <b> Пользователь {this.props.user} отключился</b>
+      </div>
+    )
+  }
+});
+
+
+  var socket = new WebSocket('ws://'+window.location.host+'/room/websocket');
   // Display a message
+
+  var userStyle = { color: 'red'};
+  var msgStyle = {
+    padding: '7px 3px'
+  };
+
   var display = function(event) {
-    var dv = document.createElement('div');
-    dv.className = 'message important';
-    
-    var userp = document.createElement('p');
-    var userptext = document.createTextNode(event.User);
-    userp.appendChild(userptext);
+    //funcaa();
 
-    var messagep = document.createElement('p');
-    var messageptext = document.createTextNode(event.Text);
-    messagep.appendChild(messageptext);
+  var el = document.getElementById('thread'); 
+  var nv = document.createElement('div');
+  el.appendChild(nv);
 
-    dv.appendChild(userp);
-    dv.appendChild(messagep);
+  if (event.Type == 'join') {
+    ReactDOM.render(
+  <JoinElement user={event.User} msgst={msgStyle} />,
+  nv);
 
-    $('#thread').append(dv);
 
-    //$('#thread').append(tmpl('message_tmpl', {event: event}));
-    //alert(event.Text);
-    //$('#thread').scrollTo('max')
+  } else if (event.Type == 'message') {
+
+  ReactDOM.render(
+  <MessageElement user={event.User} msg={event.Text} userst={userStyle} msgst={msgStyle} />,
+  nv);
+  } else {
+        ReactDOM.render(
+  <LeaveElement user={event.User} msgst={msgStyle} />,
+  nv);
+  }
+
   }
   // Message received on the socket
   socket.onmessage = function(event) {
     display(JSON.parse(event.data))
-  }
+  };
 
   $('#send').click(function(e) {
     var message = $('#message').val()

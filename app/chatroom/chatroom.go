@@ -92,8 +92,7 @@ func chatroom() {
 			wrapper.subscription <- Subscription{wrapper.roomId, subscriber}
 
 		case event := <-publish:
-			revel.INFO.Println("pool: try to publish")
-
+			revel.INFO.Printf("pool: try to publish, type = %s, user = %s, msg = %s ", event.Type, event.User, event.Text)
 			for ch := subscribers[event.RoomId].Front(); ch != nil; ch = ch.Next() {
 				ch.Value.(chan Event) <- event
 			}
@@ -107,6 +106,7 @@ func chatroom() {
 					break
 				}
 			}
+
 		}
 	}
 }
